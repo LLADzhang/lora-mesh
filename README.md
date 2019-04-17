@@ -41,6 +41,4 @@ Dependencies (install with `npm install`)
 * rxjs
 * p5
 
-
-
-
+* [Effect Plot] (https://nootropicdesign.com/projectlab/2018/10/20/lora-mesh-networking/)
