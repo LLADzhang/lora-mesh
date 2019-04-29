@@ -45,7 +45,7 @@ var mqttClient  = mqtt.connect(options)
 mqttClient.on('connect', function () {
   mqttClient.subscribe('mesh_gateway/data', function (err) {
     if (!err) {
-      console.log("successfully subscribed to topic");
+      console.log("successfully subscribed to topic mesh_gateway/data");
     } else {
       console.log("failed to subscrib to topic");
     }

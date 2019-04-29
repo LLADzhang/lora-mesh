@@ -62,8 +62,8 @@ client.connect(broker_address) #connect to broker
 print("connecting to broker")
 client.subscribe("mesh_gateway/data")
 print("Subscribing to topic","mesh_gateway/data")
-client.disconnect()
 for data in test_data:
     client.publish("mesh_gateway/data", json.dumps(data))
+    print('sent one data')
     time.sleep(1)
 print("Publishing message to topic","mesh_gateway/data")
