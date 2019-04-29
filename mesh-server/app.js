@@ -36,10 +36,8 @@ io.on('connection', function(client) {
 
 
 var options = {
-  host: 'your-mqtt-server',
+  host: 'localhost',
   port: 1883,
-  username: 'your-mqtt-username',
-  password: 'your-mqtt-password'
 }
 
 var mqttClient  = mqtt.connect(options)
@@ -54,15 +52,15 @@ mqttClient.on('connect', function () {
   })
 })
 
-mqttClient.on('message', function (topic, message) {
-  console.log(message.toString())
+mqttClient.on('message', function (topic, message, packet) {
+  console.log('received message is ' + message)
+  console.log('received topic is ' + topic)
   if (socketClient) {
-    socketClient.emit('mesh-data', message.toString());
+    socketClient.emit('mesh-data',  message.toString());
   } else {
     console.log("no socketClient");
   }
 })
-
 /*
 var testdata = [
   {"2": [{"n":1,"r":-44},{"n":255,"r":0},{"n":3,"r":-13}]},
@@ -128,5 +126,4 @@ var source = interval(1000).pipe(map(i => JSON.stringify(testdata[i % testdata.l
     }
   });
 */
-
 server.listen(4200);
