@@ -96,4 +96,4 @@ def mqtt_send(data):
     client.publish("mesh_gateway/data", json.dumps(data))
     print('publish succeeds') 
     client.disconnect()
-    print("disconnect from mqtt server"
+    print("disconnect from mqtt server")
