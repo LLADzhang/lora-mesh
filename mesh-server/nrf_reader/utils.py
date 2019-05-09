@@ -85,7 +85,7 @@ def sign_extend(val):
       sign_bit = 1 << (bits - 1)
       return (val & (sign_bit - 1)) - (val & sign_bit)
 
-def mqtt_send(data):
+def mqtt_connect():
     broker_address="localhost"
     print("creating new instance")
     client = mqtt.Client("P1") #create new instance
@@ -93,7 +93,13 @@ def mqtt_send(data):
     print("connecting to broker")
     client.subscribe("mesh_gateway/data")
     print("Subscribing to topic","mesh_gateway/data")
-    client.publish("mesh_gateway/data", json.dumps(data))
-    print('publish succeeds') 
-    client.disconnect()
+    return client
+    
+def mqtt_send(cli, data):
+    cli.publish("mesh_gateway/data", json.dumps(data))
+    print('publish data:', data) 
+    
+
+def mqtt_disconnect(cli):
+    cli.disconnect()
     print("disconnect from mqtt server")

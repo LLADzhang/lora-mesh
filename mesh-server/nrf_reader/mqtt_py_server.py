@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import json
 import time
+from utils import mqtt_send, mqtt_connect, mqtt_disconnect
 
 test_data = [
  {"2": [{"n":1,"r":-44},{"n":255,"r":0},{"n":3,"r":-13}]},
@@ -52,18 +53,15 @@ test_data = [
   {"3": [{"n":2,"r":0},{"n":2,"r":-24},{"n":255,"r":0}]},
   {"1": [{"n":255,"r":0},{"n":2,"r":-41},{"n":0,"r":0}]},
   {"1": [{"n":255,"r":0},{"n":2,"r":-52},{"n":2,"r":0}]},
-  {"3": [{"n":2,"r":0},{"n":2,"r":-24},{"n":255,"r":0}]}
+  {"3": [{"n":2,"r":0},{"n":2,"r":-24},{"n":255,"r":0}]},
+  {"4": [{"n":1,"r":-43},{"n":1,"r":-12},{"n":3,"r":-26},{"n":255, "r":0}]}
 ]
 
-broker_address="localhost"
-print("creating new instance")
-client = mqtt.Client("P1") #create new instance
-client.connect(broker_address) #connect to broker
-print("connecting to broker")
-client.subscribe("mesh_gateway/data")
-print("Subscribing to topic","mesh_gateway/data")
+cli = mqtt_connect()
 for data in test_data:
-    client.publish("mesh_gateway/data", json.dumps(data))
-    print('sent one data')
+    #client.publish("mesh_gateway/data", json.dumps(data))
+    mqtt_send(cli, data)
+    print('send', data)
     time.sleep(1)
 print("Publishing message to topic","mesh_gateway/data")
+mqtt_disconnect(cli)

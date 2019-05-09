@@ -14,7 +14,7 @@ import logging
 import datetime
 from enum import Enum
 from prettytable import PrettyTable
-from utils import battery_level_in_percent, send_to_server, get_nitrate, get_temp, sign_extend, mqtt_send
+from utils import battery_level_in_percent, send_to_server, get_nitrate, get_temp, sign_extend, mqtt_send, mqtt_connect, mqtt_disconnect
 
 __version__ = '2.0'
 __author__ = "heng"
@@ -35,7 +35,7 @@ class Msg_Type(Enum):
   MESH_TYPE_SCHEDULE = 12
 
 # Serial Connection Parameters
-DEFAULT_PORT = 'COM6'           # Connection Port
+DEFAULT_PORT = '/dev/tty.usbmodem1411'           # Connection Port
 SPEED = 115200                  # Baud Rate
 
 HEADER_SIZE = 10                # the first 10 bytes are header
@@ -51,36 +51,6 @@ PATTERN_GENERAL = '<info> app: {(.*)}'
 filename = 'logs/collect-readings-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + '.log' 
 logging.basicConfig(filename=filename, filemode='w', level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('collect-logger')
-longitude =  [
-              #  0- 6: Fake
-              1, 2, 3, 4, 5, 6,
-             #  7-12: Birck Nanotechonology Center
-              -86.925006, -86.924111, -86.924081, -86.924656, -86.925159, -86.925186,
-             # 13-20: EE Bldg
-              -86.924618, -86.911465, -86.911889, -86.911878, -86.912157, -86.912412,
-              -86.912552, -86.912327,
-             # 21-40: TPAC
-              -86.912238, -86.911495, -86.902674, -86.898943, -86.899927, -86.895463,
-              -86.897920, -86.896786, -86.901877, -86.899039, -86.899821, -86.899821,
-              -86.899821, -86.899821, -86.899821, -86.899821, -86.899821, -86.899821,
-              -86.899821, -86.899821
-
-             ] 
-latitude =  [
-              # 1- 6: Fake
-              1, 2, 3, 4, 5, 6,
-            #  7-12: Birck Nanotechonology Center
-              40.422283, 40.422349, 40.422956, 40.423248, 40.422974, 40.422721,
-            # 13-20: EE Bldg
-              40.423062, 40.428409, 40.428535, 40.428952, 40.428866, 40.428796,
-              40.429058, 40.429182, 
-            # 21-40: TPAC
-              40.428547, 40.428674, 40.296829, 40.296467, 40.295474, 40.295678,
-              40.296261, 40.296015, 40.295523, 40.297152, 40.296139, 40.296139,
-              40.296139, 40.296139, 40.296139, 40.296139, 40.296139, 40.296139,
-              40.296139, 40.296139
-            ]
-
 
 TEST_RT = {1: [{'neighbor': False, 'rssi': 255}, {'neighbor': True, 'rssi': -32}, {'neighbor': False, 'rssi': 255}, {'neighbor': False, 'rssi': 255}]}
 
@@ -89,6 +59,7 @@ def connect(port):
         Establish a connection to the serial port and start to collect readings
         from the serial port
     """
+    mqtt_cli = mqtt_connect()
     list = []
     reading = {}
     readings = []
@@ -99,19 +70,21 @@ def connect(port):
     input = serial.Serial(
         port=port, 
         baudrate=SPEED,
-        timeout=3
+        timeout=0.5
         )
-    
+   
     while input.isOpen():
       try:
         data_lines = input.readlines()
-        if data_lines:
+        if not data_lines:
+            print([])
+        else:
           
           for line in data_lines:
             data = line.decode('utf-8').split()
-            print(data)
+           # print(data)
             rssi = int(data[0])
-            print('rssi:', rssi)
+            #print('rssi:', rssi)
             hexarray = []
             for x in data[1:]:
       
@@ -133,10 +106,10 @@ def connect(port):
               
             if msg_type == Msg_Type.MESH_TYPE_RT_REPORT:
 
-              logger.info(str(time.ctime(int(time.time())))
-                          + " # of Entries = " + str(data[1])
-                           + "\n"
-                          )
+             # logger.info(str(time.ctime(int(time.time())))
+              #            + " # of Entries = " + str(data[1])
+              #             + "\n"
+              #            )
               table = PrettyTable()
 
               #table.field_names = ["isNeighbor", "# of Hops", "Next Hop", "State", "Remaining Timeout", "RSSI"]
@@ -152,12 +125,13 @@ def connect(port):
                 if state == 'Valid' and data[9 + (i - 1) * length + 1] == 1:
                     rt[owner].append({'n': i, 'r':rssi})
                 else:
-                  rt[owner].append({'n': 0, 'rssi':0})
-              print("RT report from node", data[0])
-              print(table)
-              print(rt)
-              mqtt_send(rt)
-              
+                  rt[owner].append({'n': 255, 'rssi':0})
+              #print("RT report from node", data[0])
+              #print(table)
+#              print(rt)
+              mqtt_send(mqtt_cli, rt)
+      except KeyboardInterrupt:
+          exit()
       except:
         traceback.print_exc()
         
